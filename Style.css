@@ -1,101 +1,98 @@
 * {
     box-sizing: border-box;
     touch-action: manipulation;
-    margin: 0;
-    padding: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
+    margin: 0;
+    padding: 0;
     background: #2c3e50;
-    font-family: 'Arial', sans-serif;
-    color: white;
+    font-family: Arial, sans-serif;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    min-height: 100vh;
+    color: white;
     overflow: hidden;
 }
 
-.game-container {
+#game-container {
     position: relative;
-    width: 100%;
-    max-width: 400px;
-    padding: 20px;
+    margin-top: 20px;
 }
 
-.score-board {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.game-grid {
+#game-grid {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
-    gap: 2px;
+    gap: 1px;
     background: #34495e;
+    border: 2px solid #2c3e50;
     border-radius: 5px;
-    padding: 5px;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
 }
 
 .cell {
-    aspect-ratio: 1;
+    width: 4.5vw;
+    height: 4.5vw;
+    max-width: 30px;
+    max-height: 30px;
     background: #2c3e50;
     transition: background-color 0.1s;
 }
 
-.next-piece {
-    margin-top: 15px;
+#info-panel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.7);
+    padding: 15px;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
 }
 
-#next-preview {
-    display: grid;
-    grid-template-columns: repeat(4, 20px);
-    gap: 2px;
-    margin-top: 10px;
-}
-
-.preview-cell {
-    aspect-ratio: 1;
-    background: #2c3e50;
-}
-
-.mobile-controls {
+.controls {
+    position: fixed;
+    bottom: 20px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    margin-top: 20px;
+    width: 80%;
+    max-width: 300px;
     touch-action: none;
 }
 
 .control-btn {
     background: rgba(255,255,255,0.1);
     border: none;
-    border-radius: 10px;
+    border-radius: 15px;
     color: white;
     padding: 15px;
     font-size: 24px;
     text-align: center;
     user-select: none;
+    transition: background 0.1s;
 }
 
 .control-btn:active {
     background: rgba(255,255,255,0.3);
 }
 
+#rotate-btn {
+    grid-column: 1 / 4;
+}
+
 @media (min-width: 768px) {
-    .game-container {
-        max-width: 600px;
-    }
-    
-    .game-grid {
-        grid-template-columns: repeat(10, 30px);
-    }
-    
-    .mobile-controls {
+    .controls {
         display: none;
+    }
+    
+    .cell {
+        width: 30px;
+        height: 30px;
+    }
+    
+    #info-panel {
+        right: 20px;
+        left: auto;
     }
 }
