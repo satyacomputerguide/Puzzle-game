@@ -1,0 +1,101 @@
+* {
+    box-sizing: border-box;
+    touch-action: manipulation;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #2c3e50;
+    font-family: 'Arial', sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.game-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.score-board {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    background: #34495e;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+.cell {
+    aspect-ratio: 1;
+    background: #2c3e50;
+    transition: background-color 0.1s;
+}
+
+.next-piece {
+    margin-top: 15px;
+}
+
+#next-preview {
+    display: grid;
+    grid-template-columns: repeat(4, 20px);
+    gap: 2px;
+    margin-top: 10px;
+}
+
+.preview-cell {
+    aspect-ratio: 1;
+    background: #2c3e50;
+}
+
+.mobile-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+    touch-action: none;
+}
+
+.control-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    padding: 15px;
+    font-size: 24px;
+    text-align: center;
+    user-select: none;
+}
+
+.control-btn:active {
+    background: rgba(255,255,255,0.3);
+}
+
+@media (min-width: 768px) {
+    .game-container {
+        max-width: 600px;
+    }
+    
+    .game-grid {
+        grid-template-columns: repeat(10, 30px);
+    }
+    
+    .mobile-controls {
+        display: none;
+    }
+}
