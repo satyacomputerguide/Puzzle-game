@@ -1,33 +1,31 @@
+const WIDTH = 10;
+const HEIGHT = 20;
+const SHAPES = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+const COLORS = {
+    'I': '#00f0f0', 'O': '#f0f000', 'T': '#a000f0',
+    'L': '#f0a000', 'J': '#0000f0', 'S': '#00f000',
+    'Z': '#f00000'
+};
+
 class BlockGame {
     constructor() {
-        this.WIDTH = 10;
-        this.HEIGHT = 20;
-        this.SHAPES = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
-        this.COLORS = {
-            'I': '#00f0f0', 'O': '#f0f000', 'T': '#a000f0',
-            'L': '#f0a000', 'J': '#0000f0', 'S': '#00f000',
-            'Z': '#f00000'
-        };
-        
-        this.grid = Array(this.HEIGHT).fill().map(() => Array(this.WIDTH).fill(null));
+        this.grid = Array(HEIGHT).fill().map(() => Array(WIDTH).fill(null));
         this.score = 0;
         this.level = 1;
         this.gameOver = false;
-        this.initGame();
-    }
-
-    initGame() {
-        this.createGrid();
-        this.setupControls();
+        this.initGrid();
         this.spawnPiece();
+        this.setupControls();
         this.gameLoop();
+        this.lastFrame = performance.now();
+        this.deltaTime = 0;
     }
 
-    createGrid() {
+    initGrid() {
         const grid = document.getElementById('game-grid');
         grid.innerHTML = '';
-        for (let y = 0; y < this.HEIGHT; y++) {
-            for (let x = 0; x < this.WIDTH; x++) {
+        for (let y = 0; y < HEIGHT; y++) {
+            for (let x = 0; x < WIDTH; x++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.x = x;
@@ -37,15 +35,14 @@ class BlockGame {
         }
     }
 
-    spawnPiece() {
-        const type = this.SHAPES[Math.floor(Math.random() * this.SHAPES.length)];
-        this.currentPiece = {
+    createPiece() {
+        const type = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        return {
             shape: this.getShape(type),
-            color: this.COLORS[type],
-            x: Math.floor(this.WIDTH/2) - 2,
+            color: COLORS[type],
+            x: Math.floor(WIDTH/2) - 2,
             y: 0
         };
-        this.updateNextPreview();
     }
 
     getShape(type) {
@@ -61,6 +58,14 @@ class BlockGame {
         return shapes[type];
     }
 
+    spawnPiece() {
+        this.currentPiece = this.createPiece();
+        if (this.checkCollision(0, 0)) {
+            this.gameOver = true;
+            alert(`Game Over! Score: ${this.score}`);
+        }
+    }
+
     updateGrid() {
         document.querySelectorAll('.cell').forEach(cell => {
             const x = parseInt(cell.dataset.x);
@@ -73,11 +78,13 @@ class BlockGame {
                 if (cell) {
                     const x = this.currentPiece.x + dx;
                     const y = this.currentPiece.y + dy;
-                    if (y >= 0 && x >= 0 && x < this.WIDTH) {
+                    if (y >= 0 && x >= 0 && x < WIDTH) {
                         const cellElem = document.querySelector(
                             `[data-x="${x}"][data-y="${y}"]`
                         );
-                        if (cellElem) cellElem.style.backgroundColor = this.currentPiece.color;
+                        if (cellElem) {
+                            cellElem.style.backgroundColor = this.currentPiece.color;
+                        }
                     }
                 }
             });
@@ -90,7 +97,7 @@ class BlockGame {
                 if (!cell) return false;
                 const nx = this.currentPiece.x + x + dx;
                 const ny = this.currentPiece.y + y + dy;
-                return nx < 0 || nx >= this.WIDTH || ny >= this.HEIGHT || 
+                return nx < 0 || nx >= WIDTH || ny >= HEIGHT || 
                        (ny >= 0 && this.grid[ny][nx]);
             })
         );
@@ -112,10 +119,10 @@ class BlockGame {
 
     clearLines() {
         let linesCleared = 0;
-        for (let y = this.HEIGHT - 1; y >= 0; y--) {
+        for (let y = HEIGHT - 1; y >= 0; y--) {
             if (this.grid[y].every(cell => cell)) {
                 this.grid.splice(y, 1);
-                this.grid.unshift(Array(this.WIDTH).fill(null));
+                this.grid.unshift(Array(WIDTH).fill(null));
                 linesCleared++;
                 y++;
             }
@@ -128,101 +135,84 @@ class BlockGame {
         }
     }
 
-    updateNextPreview() {
-        const preview = document.getElementById('next-preview');
-        preview.innerHTML = '';
-        this.currentPiece.shape.forEach(row => {
-            row.forEach(cell => {
-                const div = document.createElement('div');
-                div.className = 'preview-cell';
-                div.style.backgroundColor = cell ? this.currentPiece.color : '#2c3e50';
-                preview.appendChild(div);
-            });
-        });
-    }
-
     setupControls() {
-        // Mobile controls
         const controls = {
             left: () => { if (!this.checkCollision(-1, 0)) this.currentPiece.x-- },
             right: () => { if (!this.checkCollision(1, 0)) this.currentPiece.x++ },
+            down: () => { if (!this.checkCollision(0, 1)) this.currentPiece.y++ },
             rotate: () => {
                 const rotated = this.currentPiece.shape[0]
-                    .map((_, i) => this.currentPiece.shape.map(row => row[i]).reverse());
+                    .map((_, i) => this.currentPiece.shape
+                    .map(row => row[i]).reverse());
                 const original = this.currentPiece.shape;
                 this.currentPiece.shape = rotated;
-                if (this.checkCollision(0, 0)) this.currentPiece.shape = original;
+                if (this.checkCollision(0, 0)) {
+                    this.currentPiece.shape = original;
+                }
             },
             hardDrop: () => {
-                while (!this.checkCollision(0, 1)) this.currentPiece.y++;
+                while (!this.checkCollision(0, 1)) {
+                    this.currentPiece.y++;
+                }
                 this.lockPiece();
             }
         };
 
-        // Button events
-        document.getElementById('move-left').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            controls.left();
-        });
-        document.getElementById('move-right').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            controls.right();
-        });
-        document.getElementById('rotate-btn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            controls.rotate();
-        });
-        document.getElementById('hard-drop').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            controls.hardDrop();
+        ['left', 'right', 'down', 'rotate'].forEach(action => {
+            document.getElementById(`${action}-btn`).addEventListener(
+                'mousedown', controls[action]);
+            document.getElementById(`${action}-btn`).addEventListener(
+                'touchstart', (e) => {
+                    e.preventDefault();
+                    controls[action]();
+                });
         });
 
-        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (this.gameOver) return;
             switch(e.key) {
                 case 'ArrowLeft': controls.left(); break;
                 case 'ArrowRight': controls.right(); break;
+                case 'ArrowDown': controls.down(); break;
                 case 'ArrowUp': controls.rotate(); break;
-                case 'ArrowDown': controls.hardDrop(); break;
+                case ' ': controls.hardDrop(); break;
             }
         });
 
-        // Swipe controls
-        let touchStartX = null;
+        let touchStart = null;
         document.addEventListener('touchstart', e => {
-            touchStartX = e.touches[0].clientX;
+            touchStart = e.touches[0].clientX;
         }, {passive: true});
 
         document.addEventListener('touchend', e => {
-            if (!touchStartX) return;
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchEndX - touchStartX;
-            if (Math.abs(diff) > 30) {
+            if (!touchStart) return;
+            const touchEnd = e.changedTouches[0].clientX;
+            const diff = touchEnd - touchStart;
+            if (Math.abs(diff) > 50) {
                 diff > 0 ? controls.right() : controls.left();
             }
-            touchStartX = null;
+            touchStart = null;
         });
     }
 
-    gameLoop() {
+    gameLoop(currentTime) {
         if (this.gameOver) return;
-        
-        if (!this.checkCollision(0, 1)) {
-            this.currentPiece.y++;
-        } else {
-            this.lockPiece();
-            if (this.checkCollision(0, 0)) {
-                this.gameOver = true;
-                alert(`Game Over! Score: ${this.score}`);
-                return;
+
+        this.deltaTime += currentTime - this.lastFrame;
+        this.lastFrame = currentTime;
+
+        if (this.deltaTime > 1000 / this.level) {
+            if (!this.checkCollision(0, 1)) {
+                this.currentPiece.y++;
+            } else {
+                this.lockPiece();
             }
+            this.deltaTime = 0;
         }
-        
+
         this.updateGrid();
-        setTimeout(() => this.gameLoop(), 1000 / this.level);
+        requestAnimationFrame((time) => this.gameLoop(time));
     }
 }
 
-// Initialize game
 new BlockGame();
